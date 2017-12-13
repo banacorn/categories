@@ -41,66 +41,78 @@ record Category : Set₁ where
 
 
 open Category
-open IsCategory
+-- open IsCategory
 
 Hom[_] : (C : Category) → Object C → Object C → Set
 Hom[ C ] = curry (Setoid.Carrier (Morphism C))
 
-_∘_ : {C : Category} {a b c : Object C} → Hom[ C ] b c → Hom[ C ] a b → Hom[ C ] a c
-_∘_ {C} = compose C
---
--- Opposite : Category → Category
--- Opposite C = record
---     { Object = Object C
---     ; Morphism = λ a b → Morphism C b a
---     ; _≈_ = _≈_ C
---     ; compose = flip (compose C)
---     ; id = id C
---     ; isCategory = record
---         -- { assoc = λ f g h → sym (assoc (isCategory C) h g f)
---         ; ∘-left-identity = ∘-right-identity (isCategory C)
---         ; ∘-right-identity = ∘-left-identity (isCategory C)
---         }
---     }
+-- _∘_ : {C : Category} {a b c : Object C} → Hom[ C ] b c → Hom[ C ] a b → Hom[ C ] a c
+-- _∘_ {C} = compose C
 
--- Initial : {C : Category} → Object C → Set
--- Initial {C} init = ∀ obj → Hom[ C ] init obj
+Opposite : Category → Category
+Opposite C = record
+    { Object = C.Object
+    ; Morphism = record
+        { Carrier = λ idx → M.Carrier (swap idx)
+        ; _≈_ = λ f g → M._≈_ g f
+        ; isEquivalence = record
+            { refl = Eq.refl
+            ; sym = Eq.sym
+            ; trans = λ f g → Eq.trans g f
+            }
+        }
+    ; compose = λ f g → C.compose g f
+    ; id = C.id
+    ; isCategory = record
+        { assoc = λ f g h → isC.assoc h g f
+        ; ∘-left-identity = λ f → Eq.sym (isC.∘-right-identity f)
+        ; ∘-right-identity = λ f → Eq.sym (isC.∘-left-identity f)
+        }
+    }
+    where
+        module C = Category C
+        module M = Setoid C.Morphism
+        module Eq = IsEquivalence M.isEquivalence
+        module isC = IsCategory C.isCategory
+
+Initial : {C : Category} → Object C → Set
+Initial {C} init = ∀ obj → Hom[ C ] init obj
+
+Terminal : {C : Category} → Object C → Set
+Terminal {C} term = ∀ obj → Hom[ C ] obj term
+
+Initial-Terminal-Opposite : {C : Category} {init : Object C}
+    → Initial {C} init → Terminal {Opposite C} init
+Initial-Terminal-Opposite proof = proof
+
+record IsProduct    {C : Category}
+                    (product fst snd : Object C)
+                    (π₁ : Hom[ C ] product fst) (π₂ : Hom[ C ] product snd)
+                    (y : Object C)
+                    (f₁ : Hom[ C ] y fst) (f₂ : Hom[ C ] y snd)
+                    : Set where
+    _⇒_ = Hom[ C ]
+    _∘_ = compose C
+    field
+        morphism : y ⇒ product
+        commute₁ : f₁ ≡ π₁ ∘ morphism
+        commute₂ : f₂ ≡ π₂ ∘ morphism
+
 --
--- Terminal : {C : Category} → Object C → Set
--- Terminal {C} term = ∀ obj → Hom[ C ] obj term
---
--- Initial-Terminal-Opposite : {C : Category} {init : Object C}
---     → Initial {C} init → Terminal {Opposite C} init
--- Initial-Terminal-Opposite proof = proof
---
--- record IsProduct    {C : Category}
---                     (product fst snd : Object C)
---                     (π₁ : Hom[ C ] product fst) (π₂ : Hom[ C ] product snd)
---                     (y : Object C)
---                     (f₁ : Hom[ C ] y fst) (f₂ : Hom[ C ] y snd)
---                     : Set where
---     _⇒_ = Hom[ C ]
---     _∘_ = compose C
---     field
---         morphism : y ⇒ product
---         commute₁ : f₁ ≡ π₁ ∘ morphism
---         commute₂ : f₂ ≡ π₂ ∘ morphism
---
--- --
--- -- Product : {C : Category} → Object C → Set
--- -- Product {C} prod =
--- --     Σ[ i ∈ Object C ] Σ[ πᵢ ∈ prod ⇒ i ]
--- --     Σ[ j ∈ Object C ] Σ[ πⱼ ∈ prod ⇒ j ]
--- --     ∀ (x : Object C) (fᵢ : x ⇒ i) (fⱼ : x ⇒ j)
--- --     → Σ[ f ∈ x ⇒ prod ] (fᵢ ≡ πᵢ ∘ f × fⱼ ≡ πⱼ ∘ f)
--- record Product {C : Category} (product : Object C) : Set₁ where
---     _⇒_ = Hom[ C ]
---     _∘_ = compose C
---     field
---         fst snd : Object C
---         π₁ : product ⇒ fst
---         π₂ : product ⇒ snd
---         isProduct : ∀ y f₁ f₂ → IsProduct {C} product fst snd π₁ π₂ y f₁ f₂
+-- Product : {C : Category} → Object C → Set
+-- Product {C} prod =
+--     Σ[ i ∈ Object C ] Σ[ πᵢ ∈ prod ⇒ i ]
+--     Σ[ j ∈ Object C ] Σ[ πⱼ ∈ prod ⇒ j ]
+--     ∀ (x : Object C) (fᵢ : x ⇒ i) (fⱼ : x ⇒ j)
+--     → Σ[ f ∈ x ⇒ prod ] (fᵢ ≡ πᵢ ∘ f × fⱼ ≡ πⱼ ∘ f)
+record Product {C : Category} (product : Object C) : Set₁ where
+    _⇒_ = Hom[ C ]
+    _∘_ = compose C
+    field
+        fst snd : Object C
+        π₁ : product ⇒ fst
+        π₂ : product ⇒ snd
+        isProduct : ∀ y f₁ f₂ → IsProduct {C} product fst snd π₁ π₂ y f₁ f₂
 --
 -- module Example where
 --
