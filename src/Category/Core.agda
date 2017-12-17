@@ -26,10 +26,11 @@ record IsCategory   {c ℓ : Level}
             → (f : a ⇒ b)
             → (f ∘ id a) ≈ f
 
-record Category : Set₁ where
+record Category {c ℓ : Level} : Set (suc (c ⊔ ℓ)) where
+    infixr 9 _∘_
     field
-        Object : Set
-        Morphism : Setoid (Object × Object) _ _
+        Object : Set c
+        Morphism : Setoid (Object × Object) c ℓ
         _∘_ : ∀ {a b c : Object}
             → Setoid.Carrier Morphism (b , c)
             → Setoid.Carrier Morphism (a , b)
@@ -37,7 +38,7 @@ record Category : Set₁ where
         id : (a : Object) → Setoid.Carrier Morphism (a , a)
         isCategory : IsCategory Morphism _∘_ id
 
-Opposite : Category → Category
+Opposite : {c ℓ : Level} → Category {c} {ℓ} → Category {c} {ℓ}
 Opposite C = record
     { Object = C.Object
     ; Morphism = record

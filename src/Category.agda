@@ -1,39 +1,38 @@
+open import Level
 open import Category.Core
 
-module Category (C : Category) where
+module Category {c ℓ : Level} (C : Category {c} {ℓ}) where
 
-open import Level
 open import Data.Product
 open import Relation.Binary.Indexed
 
 open Category C
 
-infixr 9 _∘_
 infix 4 _≈_
 
 -- Arrows
-_⇒_ : Object → Object → Set
+_⇒_ : Object → Object → Set c
 _⇒_ = curry (Setoid.Carrier Morphism)
 
 -- Object Isomorphism
-_≅_ : (a b : Object) → Set
+_≅_ : (a b : Object) → Set c
 a ≅ b = a ⇒ b × b ⇒ a
 
 -- Arrow Equivalence
-_≈_ : {a b : Object} → (f g : a ⇒ b) → Set
+_≈_ : {a b : Object} → (f g : a ⇒ b) → Set ℓ
 _≈_ = Setoid._≈_ Morphism
 
-Initial : Object → Set
+Initial : Object → Set c
 Initial init = ∀ obj → init ⇒ obj
 
-Terminal : Object → Set
+Terminal : Object → Set c
 Terminal term = ∀ obj → obj ⇒ term
 
 record IsProduct    (product fst snd : Object)
                     (π₁ : product ⇒ fst) (π₂ : product ⇒ snd)
                     (y : Object)
                     (f₁ : y ⇒ fst) (f₂ : y ⇒ snd)
-                    : Set where
+                    : Set (suc (c ⊔ ℓ)) where
     field
         morphism : y ⇒ product
         commute₁ : f₁ ≈ π₁ ∘ morphism
@@ -46,7 +45,7 @@ record IsProduct    (product fst snd : Object)
 --     Σ[ j ∈ Object ] Σ[ πⱼ ∈ prod ⇒ j ]
 --     ∀ (x : Object) (fᵢ : x ⇒ i) (fⱼ : x ⇒ j)
 --     → Σ[ f ∈ x ⇒ prod ] (fᵢ ≈ πᵢ ∘ f × fⱼ ≈ πⱼ ∘ f)
-record Product (product : Object) : Set₁ where
+record Product (product : Object) : Set (suc (c ⊔ ℓ)) where
     field
         fst snd : Object
         π₁ : product ⇒ fst
