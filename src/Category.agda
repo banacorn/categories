@@ -1,131 +1,70 @@
-module Category where
+open import Category.Core
+
+module Category (C : Category) where
 
 open import Level
 open import Data.Product
-open import Data.Unit using (⊤; tt)
-open import Function using (flip)
 open import Relation.Binary.Indexed
 
-record IsCategory   {c ℓ : Level}
-                    {Object : Set c}
-                    (Morphism : Setoid (Object × Object) c ℓ)
-                    (_∘_ : ∀ {a b c}
-                        → Setoid.Carrier Morphism (b , c)
-                        → Setoid.Carrier Morphism (a , b)
-                        → Setoid.Carrier Morphism (a , c))
-                    (id : (a : Object) → Setoid.Carrier Morphism (a , a))
-                    : Set (suc (c ⊔ ℓ)) where
-    open Setoid Morphism using (_≈_)
-    _⇒_ = curry (Setoid.Carrier Morphism)
+open Category C
+
+infixr 9 _∘_
+infix 4 _≈_
+
+-- Arrows
+_⇒_ : Object → Object → Set
+_⇒_ = curry (Setoid.Carrier Morphism)
+
+-- Object Isomorphism
+_≅_ : (a b : Object) → Set
+a ≅ b = a ⇒ b × b ⇒ a
+
+-- Arrow Equivalence
+_≈_ : {a b : Object} → (f g : a ⇒ b) → Set
+_≈_ = Setoid._≈_ Morphism
+
+Initial : Object → Set
+Initial init = ∀ obj → init ⇒ obj
+
+Terminal : Object → Set
+Terminal term = ∀ obj → obj ⇒ term
+
+record IsProduct    (product fst snd : Object)
+                    (π₁ : product ⇒ fst) (π₂ : product ⇒ snd)
+                    (y : Object)
+                    (f₁ : y ⇒ fst) (f₂ : y ⇒ snd)
+                    : Set where
     field
-        assoc : ∀ {a b c d : Object}
-            → (f : a ⇒ b) → (g : b ⇒ c) → (h : c ⇒ d)
-            → ((h ∘ g) ∘ f) ≈ (h ∘ (g ∘ f))
-        ∘-left-identity : ∀ {a b : Object}
-            → (f : a ⇒ b)
-            → (id b ∘ f) ≈ f
-        ∘-right-identity : ∀ {a b : Object}
-            → (f : a ⇒ b)
-            → (f ∘ id a) ≈ f
+        morphism : y ⇒ product
+        commute₁ : f₁ ≈ π₁ ∘ morphism
+        commute₂ : f₂ ≈ π₂ ∘ morphism
 
-record Category : Set₁ where
+
+-- Product : Object → Set
+-- Product prod =
+--     Σ[ i ∈ Object ] Σ[ πᵢ ∈ prod ⇒ i ]
+--     Σ[ j ∈ Object ] Σ[ πⱼ ∈ prod ⇒ j ]
+--     ∀ (x : Object) (fᵢ : x ⇒ i) (fⱼ : x ⇒ j)
+--     → Σ[ f ∈ x ⇒ prod ] (fᵢ ≈ πᵢ ∘ f × fⱼ ≈ πⱼ ∘ f)
+record Product (product : Object) : Set₁ where
     field
-        Object : Set
-        Morphism : Setoid (Object × Object) _ _
-        _∘_ : ∀ {a b c : Object}
-            → Setoid.Carrier Morphism (b , c)
-            → Setoid.Carrier Morphism (a , b)
-            → Setoid.Carrier Morphism (a , c)
-        id : (a : Object) → Setoid.Carrier Morphism (a , a)
-        isCategory : IsCategory Morphism _∘_ id
+        fst snd : Object
+        π₁ : product ⇒ fst
+        π₂ : product ⇒ snd
+        isProduct : ∀ y f₁ f₂ → IsProduct product fst snd π₁ π₂ y f₁ f₂
 
-Opposite : Category → Category
-Opposite C = record
-    { Object = C.Object
-    ; Morphism = record
-        { Carrier = λ idx → M.Carrier (swap idx)
-        ; _≈_ = λ f g → M._≈_ g f
-        ; isEquivalence = record
-            { refl = Eq.refl
-            ; sym = Eq.sym
-            ; trans = λ f g → Eq.trans g f
-            }
-        }
-    ; _∘_ = λ f g → C._∘_ g f
-    ; id = C.id
-    ; isCategory = record
-        { assoc = λ f g h → isC.assoc h g f
-        ; ∘-left-identity = λ f → Eq.sym (isC.∘-right-identity f)
-        ; ∘-right-identity = λ f → Eq.sym (isC.∘-left-identity f)
-        }
-    }
-    where
-        module C = Category C
-        module M = Setoid C.Morphism
-        module Eq = IsEquivalence M.isEquivalence
-        module isC = IsCategory C.isCategory
+module Properties where
 
-module Test (C : Category) where
+    Product-right-identity : (p : Object)
+        → (proof : Product p)
+        → Initial (Product.fst proof)
+        → Product.fst proof ≅ p
+    Product-right-identity p proof initial = initial p , Product.π₁ proof
 
-    open Category C
-
-    infixr 9 _∘_
-    infix 4 _≈_
-
-    -- Arrows
-    _⇒_ : Object → Object → Set
-    _⇒_ = curry (Setoid.Carrier Morphism)
-
-    -- Object Isomorphism
-    _≅_ : (a b : Object) → Set
-    a ≅ b = a ⇒ b × b ⇒ a
-
-    -- Arrow Equivalence
-    _≈_ : {a b : Object} → (f g : a ⇒ b) → Set
-    _≈_ = Setoid._≈_ Morphism
-
-    Initial : Object → Set
-    Initial init = ∀ obj → init ⇒ obj
-
-    Terminal : Object → Set
-    Terminal term = ∀ obj → obj ⇒ term
-
-    record IsProduct    (product fst snd : Object)
-                        (π₁ : product ⇒ fst) (π₂ : product ⇒ snd)
-                        (y : Object)
-                        (f₁ : y ⇒ fst) (f₂ : y ⇒ snd)
-                        : Set where
-        field
-            morphism : y ⇒ product
-            commute₁ : f₁ ≈ π₁ ∘ morphism
-            commute₂ : f₂ ≈ π₂ ∘ morphism
-
-
-    -- Product : Object → Set
-    -- Product prod =
-    --     Σ[ i ∈ Object ] Σ[ πᵢ ∈ prod ⇒ i ]
-    --     Σ[ j ∈ Object ] Σ[ πⱼ ∈ prod ⇒ j ]
-    --     ∀ (x : Object) (fᵢ : x ⇒ i) (fⱼ : x ⇒ j)
-    --     → Σ[ f ∈ x ⇒ prod ] (fᵢ ≈ πᵢ ∘ f × fⱼ ≈ πⱼ ∘ f)
-    record Product (product : Object) : Set₁ where
-        field
-            fst snd : Object
-            π₁ : product ⇒ fst
-            π₂ : product ⇒ snd
-            isProduct : ∀ y f₁ f₂ → IsProduct product fst snd π₁ π₂ y f₁ f₂
-
-    module Properties where
-
-        Product-right-identity : (p : Object)
-            → (proof : Product p)
-            → Initial (Product.fst proof)
-            → Product.fst proof ≅ p
-        Product-right-identity p proof initial = initial p , Product.π₁ proof
-
-        Terminal-unique : {p q : Object}
-            → Terminal p → Terminal q
-            → p ≅ q
-        Terminal-unique {p} {q} p-term q-term = q-term p , p-term q
+    Terminal-unique : {p q : Object}
+        → Terminal p → Terminal q
+        → p ≅ q
+    Terminal-unique {p} {q} p-term q-term = q-term p , p-term q
 
 -- -- module Example where
 -- --
