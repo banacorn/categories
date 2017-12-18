@@ -8,20 +8,6 @@ open import Relation.Binary.Indexed
 
 open Category C
 
-infix 4 _≈_
-
--- Arrows
-_⇒_ : Object → Object → Set c
-_⇒_ = curry (Setoid.Carrier Morphism)
-
--- Object Isomorphism
-_≅_ : (a b : Object) → Set c
-a ≅ b = a ⇒ b × b ⇒ a
-
--- Arrow Equivalence
-_≈_ : {a b : Object} → (f g : a ⇒ b) → Set ℓ
-_≈_ = Setoid._≈_ Morphism
-
 Initial : Object → Set c
 Initial init = ∀ obj → init ⇒ obj
 
