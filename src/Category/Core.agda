@@ -53,34 +53,8 @@ record Category {c ℓ : Level} : Set (suc (c ⊔ ℓ)) where
     _≈_ : {a b : Object} → (f g : a ⇒ b) → Set (ℓ ⊔ c)
     _≈_ = Setoid._≈_ Morphism
 
-
-
-    -- [_]≈[_]-IsEquivalence : {a b a' b' : Object}
-    --     → (a≡a' : a ≡ a') → (b≡b' : b ≡ b')
-    --     → IsEquivalence {!   !} (λ f g → {! f [ a≡a' ]≈[ b≡b' ] g  !})
-    -- [_]≈[_]-IsEquivalence a≡a' b≡b' = record
-    --     { refl = {!   !}
-    --     ; sym = {!   !}
-    --     ; trans = {!   !}
-    --     }
-
-
     hom[-,_] : Object → Set c
     hom[-, b ] = Σ[ a ∈ Object ] Setoid.Carrier Morphism (a , b)
-
-    source : {b : Object} → hom[-, b ] → Object
-    source = proj₁
-
-    hom-set : {b : Object} → (h : hom[-, b ]) → Setoid.Carrier Morphism (source h , b)
-    hom-set = proj₂
-
-    -- hom[_,-] : Object → Set c
-    -- hom[ a ,-] = ∀ b → Setoid.Carrier Morphism (a , b)
-    --
-    -- hom[_,_] : Object → Object → Set c
-    -- hom[ a , b ] = ∀ a b → Setoid.Carrier Morphism (a , b)
-
--- open Category using (Object; _⇒_)
 
 record IsFunctor {c ℓ : Level} {C D : Category {c} {ℓ}}
     (mapObject : Category.Object C → Category.Object D)
@@ -156,14 +130,10 @@ constant C {D} d = record
 _/_ : ∀ {c ℓ} → (C : Category {c} {ℓ}) → (b : Category.Object C) → Category {c} {ℓ}
 _/_ {c} {ℓ} C b = record
     { Object = hom[-, b ]
-    ; Morphism = record
-        { Carrier = SliceMorphism
-        ; _≈_ = eq
-        ; isEquivalence = eq-isEquivalence
-        }
-    ; _∘_ = {!   !}
-    ; id = {!   !}
-    ; isCategory = {!   !}
+    ; Morphism = Slice-Morphism
+    ; _∘_ = Slice-∘
+    ; id = Slice-id
+    ; isCategory = Slice-isCategory
     }
     where
         open Category C
@@ -208,17 +178,29 @@ _/_ {c} {ℓ} C b = record
             ; trans = eq-Transitive
             }
 
--- _↓_ : ∀ {c ℓ} → {C D E : Category {c} {ℓ}}
---     → Functor C E → Functor D E
---     → Category {{!   !}} {{!   !}}
--- _↓_ {_} {_} {C} {D} {E} S T = record
---     { Object = {! Functor.mapObject S  !} × {!   !} × {!   !}
---     ; Morphism = {!   !}
---     ; _∘_ = {!   !}
---     ; id = {!   !}
---     ; isCategory = {!   !}
---     }
---     where
---         module C = Category C
---         module D = Category D
---         open Category E
+        Slice-Morphism : Setoid (hom[-, b ] × hom[-, b ]) c (ℓ ⊔ c)
+        Slice-Morphism = record
+            { Carrier = SliceMorphism
+            ; _≈_ = eq
+            ; isEquivalence = eq-isEquivalence
+            }
+
+        Slice-∘ : ∀ {a b c}
+            → SliceMorphism (b , c)
+            → SliceMorphism (a , b)
+            → SliceMorphism (a , c)
+        Slice-∘ f g = record { morphism = morphism f ∘ morphism g }
+            where   open SliceMorphism
+
+        Slice-id : ∀ a → SliceMorphism (a , a)
+        Slice-id (a , _) = record { morphism = id a }
+
+        Slice-isCategory : IsCategory Slice-Morphism Slice-∘ Slice-id
+        Slice-isCategory = record
+            { assoc = λ f g h → refl , refl , assoc (morphism f) (morphism g) (morphism h)
+            ; ∘-left-identity = λ f → refl , refl , ∘-left-identity (morphism f)
+            ; ∘-right-identity = λ f → refl , refl , ∘-right-identity (morphism f)
+            }
+            where
+                open IsCategory isCategory
+                open SliceMorphism
