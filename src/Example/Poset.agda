@@ -1,12 +1,27 @@
 module Example.Poset where
--- open import Category
+
+open import Category.Core
+
 open import Level
+open import Data.Product
 open import Relation.Binary
-open import Function using (flip)
-open import Data.Unit using (⊤; tt)
+open import Relation.Binary.Indexed
+-- open import Function using (flip)
+-- open import Data.Unit using (⊤; tt)
+
 open Poset
 
-open IsPartialOrder
+
+
+Poset→Category : Poset zero zero zero → Category {zero} {zero}
+Poset→Category poset = record
+    { Object = Poset.Carrier poset
+    ; Morphism = record { Carrier = {!   !} ; _≈_ = {!   !} ; isEquivalence = {!   !} }
+    ; _∘_ = {!   !}
+    ; id = {!   !}
+    ; isCategory = {!   !}
+    }
+-- open IsPartialOrder
 
 -- a poset = trans (isPreorder (isPartcialOrder poset))
 
