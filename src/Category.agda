@@ -40,13 +40,13 @@ record Product (product : Object) : Set (suc (c ⊔ ℓ)) where
 
 module Properties where
 
-    Product-right-identity : (p : Object)
-        → (proof : Product p)
-        → Initial (Product.fst proof)
-        → Product.fst proof ≅ p
-    Product-right-identity p proof initial = initial p , Product.π₁ proof
+    -- Product-right-identity : (p : Object)
+    --     → (proof : Product p)
+    --     → Initial (Product.fst proof)
+    --     → Product.fst proof ≅ p
+    -- Product-right-identity p proof initial = initial p , Product.π₁ proof
 
-    Terminal-unique : {p q : Object}
-        → Terminal p → Terminal q
-        → p ≅ q
-    Terminal-unique {p} {q} p-term q-term = q-term p , p-term q
+    -- Terminal-unique : {p q : Object}
+    --     → Terminal p → Terminal q
+    --     → p ≅ q
+    -- Terminal-unique {p} {q} p-term q-term = q-term p , p-term q
