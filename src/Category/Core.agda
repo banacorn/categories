@@ -56,6 +56,9 @@ record Category {c ℓ : Level} : Set (suc (c ⊔ ℓ)) where
     hom[-,_] : Object → Set c
     hom[-, b ] = Σ[ a ∈ Object ] Setoid.Carrier Morphism (a , b)
 
+    hom[_,_] : Object → Object → Set c
+    hom[ a , b ] = Setoid.Carrier Morphism (a , b)
+
 record IsFunctor {c ℓ : Level} {C D : Category {c} {ℓ}}
     (mapObject : Category.Object C → Category.Object D)
     (mapMorphism : ∀ {a b}
