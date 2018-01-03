@@ -5,6 +5,7 @@ open import Data.Product
 open import Category.Core
 open import Relation.Binary as B using ()
 open import Relation.Binary.Indexed
+open import Relation.Binary.Indexed.Extra
 open import Relation.Binary.PropositionalEquality as PropEq using (_≡_; refl)
 
 _/_ : ∀ {𝒸 ℓ} → (C : Category {𝒸} {ℓ}) → (b : Category.Object C) → Category {𝒸} {ℓ}
@@ -134,7 +135,7 @@ _↓_ : ∀ {𝒸 ℓ} → {C D E : Category {𝒸} {ℓ}}
 _↓_ {𝒸} {ℓ} {C} {D} {E} S T = record
     { ObjectSetoid = CommaObjectSetoid -- CommaObject
     ; MorphismSetoid = CommaMorphismSetoid -- morphism
-    ; _∘_ = {!   !}
+    ; _∘_ = Comma-∘
     ; id = {!   !}
     ; isCategory = {!   !}
     }
@@ -240,10 +241,29 @@ _↓_ {𝒸} {ℓ} {C} {D} {E} S T = record
             → CommaMorphism b c
             → CommaMorphism a b
             → CommaMorphism a c
-        Comma-∘ f g = record
+        Comma-∘ {a} {b} {c} f g = record
             { morphismBetweenSources = morphismBetweenSources f ∘ morphismBetweenSources g
             ; morphismBetweenTargets = morphismBetweenTargets f ∘ morphismBetweenTargets g
-            ; commutes = {!   !}
+            ; commutes =
+                begin⟨ MorphismSetoid ⟩
+                    morphism c ∘ (morphismBetweenSources f ∘ morphismBetweenSources g)
+                ≈⟨ sym (assoc (morphismBetweenSources g) (morphismBetweenSources f) (morphism c)) ⟩
+                    (morphism c ∘ morphismBetweenSources f) ∘ morphismBetweenSources g
+                ≈⟨ cong (λ x → x ∘ morphismBetweenSources g) (commutes f) ⟩
+                    morphismBetweenTargets f ∘ morphism b ∘ morphismBetweenSources g
+                ≈⟨ {!  morphism c !} ⟩
+                    {!   !}
+                ≈⟨ {!   !} ⟩
+                    (morphismBetweenTargets f ∘ morphismBetweenTargets g) ∘ a .morphism
+                ∎
             }
-            where   open CommaMorphism
-                    open import Relation.Binary using (IsPreorder)
+            where
+                open CommaMorphism
+                open import Relation.Binary.Indexed.SetoidReasoning
+                open IsCategory isCategory
+                open IsEquivalence (Setoid.isEquivalence MorphismSetoid)
+
+                open import Function using (_on_)
+                cong : ∀ {i j} {x y} → (f : Setoid.Carrier MorphismSetoid {!   !} → Setoid.Carrier MorphismSetoid {!   !})
+                    → Setoid._≈_ MorphismSetoid x y → Setoid._≈_ MorphismSetoid (f x) (f y)
+                cong f x≈y = {!   !}
