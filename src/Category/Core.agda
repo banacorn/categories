@@ -7,31 +7,54 @@ open import Relation.Binary as B using ()
 open import Relation.Binary.Indexed
 open import Relation.Binary.PropositionalEquality as PropEq using (_≡_; refl)
 
-record IsCategory   {𝒸 ℓ : Level}
+record IsMorphism   {𝒸 ℓ : Level}
                     {Object : Set 𝒸}
-                    (MorphismSetoid : Setoid (Object × Object) 𝒸 ℓ)
-                    (_∘_ : ∀ {a b c}
-                        → Setoid.Carrier MorphismSetoid (b , c)
-                        → Setoid.Carrier MorphismSetoid (a , b)
-                        → Setoid.Carrier MorphismSetoid (a , c))
-                    (id : (a : Object) → Setoid.Carrier MorphismSetoid (a , a))
+                    {Carrier : (Object × Object) → Set 𝒸}
+                    (_≈_ : Rel Carrier ℓ)
+                    (_∘_ : ∀ {a b c} → Carrier (b , c) → Carrier (a , b) → Carrier (a , c))
+                    (id : (a : Object) → Carrier (a , a))
                     : Set (suc (𝒸 ⊔ ℓ)) where
-    open Setoid MorphismSetoid using (_≈_)
-    _⇒_ = curry (Setoid.Carrier MorphismSetoid)
+    _⇒_ = curry Carrier
     field
         assoc : ∀ {a b c d : Object}
             → (f : a ⇒ b) → (g : b ⇒ c) → (h : c ⇒ d)
             → ((h ∘ g) ∘ f) ≈ (h ∘ (g ∘ f))
-        ∘-left-identity : ∀ {a b : Object}
+        left-identity : ∀ {a b : Object}
             → (f : a ⇒ b)
             → (id b ∘ f) ≈ f
-        ∘-right-identity : ∀ {a b : Object}
+        right-identity : ∀ {a b : Object}
             → (f : a ⇒ b)
             → (f ∘ id a) ≈ f
+        cong : ∀ {a b c a' b' c' : Object}
+            {x : Carrier (b , c)} {y : Carrier (b' , c')}
+            {u : Carrier (a , b)} {v : Carrier (a' , b')}
+            → x ≈ y → u ≈ v → (x ∘ u) ≈ (y ∘ v)
 
-record Category {𝒸 ℓ : Level} : Set (suc (𝒸 ⊔ ℓ)) where
+record MorphismStructure (𝒸 ℓ : Level) (Object : Set 𝒸) : Set (suc (𝒸 ⊔ ℓ)) where
     infixr 9 _∘_
     infix 4 _≈_
+    field
+        Carrier : (Object × Object) → Set 𝒸
+        _≈_ : Rel Carrier ℓ
+        isEquivalence : IsEquivalence Carrier _≈_
+
+    setoid : Setoid (Object × Object) _ _
+    setoid = record { isEquivalence = isEquivalence }
+
+    -- Arrows
+    _⇒_ : Object → Object → Set 𝒸
+    _⇒_ = curry Carrier
+
+    field
+        _∘_ : ∀ {a b c : Object}
+            → b ⇒ c
+            → a ⇒ b
+            → a ⇒ c
+        id : (a : Object) → a ⇒ a
+        isMorphism : IsMorphism _≈_ _∘_ id
+
+
+record Category {𝒸 ℓ : Level} : Set (suc (𝒸 ⊔ ℓ)) where
 
     field
         ObjectSetoid : B.Setoid 𝒸 ℓ
@@ -43,27 +66,9 @@ record Category {𝒸 ℓ : Level} : Set (suc (𝒸 ⊔ ℓ)) where
     _≈o_ = B.Setoid._≈_ ObjectSetoid
 
     field
-        MorphismSetoid : Setoid (Object × Object) 𝒸 ℓ
+        Morphism : MorphismStructure 𝒸 ℓ Object
 
-    -- Arrows
-    _⇒_ : Object → Object → Set 𝒸
-    _⇒_ = curry (Setoid.Carrier MorphismSetoid)
-
-    field
-        _∘_ : ∀ {a b c : Object}
-            → b ⇒ c
-            → a ⇒ b
-            → a ⇒ c
-        id : (a : Object) → a ⇒ a
-        isCategory : IsCategory MorphismSetoid _∘_ id
-
-
-    -- Arrow Equivalence
-    -- [_]_≈_[_] : {a b a' b' : Object} → a  a' → a ⇒ b → a' ⇒ b' → b ≡ b' → Set ℓ
-    -- [ refl ] a→b ≈ a'→b' [ refl ] = a→b ≈ a'→b'
-
-    _≈_ : {a b a' b' : Object} → (f : a ⇒ b) → (g : a' ⇒ b') → Set ℓ
-    _≈_ = Setoid._≈_ MorphismSetoid
+    open MorphismStructure Morphism public
 
     hom[-,_] : Object → Set 𝒸
     hom[-, b ] = Σ[ a ∈ Object ] a ⇒ b
@@ -94,48 +99,3 @@ record Functor {𝒸 ℓ : Level} (C D : Category {𝒸} {ℓ}) : Set (suc (𝒸
         mapObject : C.Object → D.Object
         mapMorphism : ∀ {a b} → a C.⇒ b → mapObject a D.⇒ mapObject b
         isFunctor : IsFunctor {𝒸} {ℓ} {C} {D} mapObject mapMorphism
-
---
--- opposite : {𝒸 ℓ : Level} → Category {c} {ℓ} → Category {c} {ℓ}
--- opposite C = record
---     { Object = C.Object
---     ; Morphism = record
---         { Carrier = λ idx → M.Carrier (swap idx)
---         ; _≈_ = λ f g → M._≈_ g f
---         ; isEquivalence = record
---             { refl = Eq.refl
---             ; sym = Eq.sym
---             ; trans = λ f g → Eq.trans g f
---             }
---         }
---     ; _∘_ = λ f g → C._∘_ g f
---     ; id = C.id
---     ; isCategory = record
---         { assoc = λ f g h → isC.assoc h g f
---         ; ∘-left-identity = λ f → Eq.sym (isC.∘-right-identity f)
---         ; ∘-right-identity = λ f → Eq.sym (isC.∘-left-identity f)
---         }
---     }
---     where
---         module C = Category C
---         module M = Setoid C.Morphism
---         module Eq = IsEquivalence M.isEquivalence
---         module isC = IsCategory C.isCategory
---
--- constant : ∀ {𝒸 ℓ}
---     → (C : Category {c} {ℓ})
---     → {D : Category {c} {ℓ}}
---     → (d : Category.Object D) → Functor C D
--- constant C {D} d = record
---     { mapObject = λ _ → d
---     ; mapMorphism = λ _ → id d
---     ; isFunctor = record
---         { preserve-id = λ _ → Morphism.refl
---         ; preserve-∘ = Morphism.sym (∘-right-identity (id d))
---         }
---     }
---     where
---         module C = Category C
---         open Category D
---         open IsCategory isCategory
---         module Morphism = IsEquivalence (Setoid.isEquivalence Morphism)

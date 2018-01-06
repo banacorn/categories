@@ -10,21 +10,13 @@ open import Relation.Binary.PropositionalEquality as PropEq using (_≡_; refl)
 
 _/_ : ∀ {𝒸 ℓ} → (C : Category {𝒸} {ℓ}) → (b : Category.Object C) → Category {𝒸} {ℓ}
 _/_ {𝒸} {ℓ} C b = record
-    { ObjectSetoid = SliceObjectSetoid -- SliceObjectSetoid
-    ; MorphismSetoid = SliceMorphismSetoid -- SliceMorphismSetoid
-    ; _∘_ = Slice-∘
-    ; id = Slice-id
-    ; isCategory = Slice-isCategory
+    { ObjectSetoid = SliceObjectSetoid
+    ; Morphism = SliceMorphismStructure
     }
     where
         open Category C
         module ObjEq = B.IsEquivalence (B.Setoid.isEquivalence ObjectSetoid)
-        module MorphEq = IsEquivalence (Setoid.isEquivalence MorphismSetoid)
-
-        -- -- a device for unifying the source of arrows
-        -- -- so that we can compare them with _≈_
-        -- _≈_[_] : ∀ {x y} → x ⇒ b → y ⇒ b → x ≡ y → Set ℓ
-        -- x→b ≈ y→b [ refl ] = x→b ≈ y→b
+        module MorphEq = IsEquivalence (MorphismStructure.isEquivalence Morphism)
 
         SliceObject-≈ : B.Rel hom[-, b ] ℓ
         SliceObject-≈ (x , x→b) (y , y→b) = Σ[ x≈y ∈ x ≈o y ] x→b ≈ y→b
@@ -61,17 +53,6 @@ _/_ {𝒸} {ℓ} C b = record
             field
                 morphism : source ⇒ target
 
-        -- record SliceMorphism-≈
-        --         {f-src g-src f-tar g-tar : hom[-, b ]}
-        --         (f : SliceMorphism f-src g-src)
-        --         (g : SliceMorphism f-tar g-tar)
-        --         : Set ℓ where
-        --     open SliceMorphism
-        --     field
-        --         source-≈ : SliceObject-≈ f-src g-src
-        --         target-≈ : SliceObject-≈ f-tar g-tar
-        --         ≈ : morphism f ≈ morphism g
-
         SliceMorphism-≈ : Rel (uncurry SliceMorphism) ℓ
         SliceMorphism-≈ {f-src , f-tar} {g-src , g-tar} f g =
             Σ[ source-≈ ∈ SliceObject-≈ f-src g-src ]
@@ -99,13 +80,6 @@ _/_ {𝒸} {ℓ} C b = record
             ; trans = λ {i} {j} {k} {f} {g} {h} → SliceMorphism-≈-Transitive {i} {j} {k} {f} {g} {h} --
             }
 
-        SliceMorphismSetoid : Setoid (hom[-, b ] × hom[-, b ]) 𝒸 ℓ
-        SliceMorphismSetoid = record
-            { Carrier = uncurry SliceMorphism
-            ; _≈_ = SliceMorphism-≈
-            ; isEquivalence = SliceMorphism-≈-IsEquivalence
-            }
-
         Slice-∘ : ∀ {a b c}
             → SliceMorphism b c
             → SliceMorphism a b
@@ -116,15 +90,27 @@ _/_ {𝒸} {ℓ} C b = record
         Slice-id : ∀ a → SliceMorphism a a
         Slice-id (a , _) = record { morphism = id a }
 
-        Slice-isCategory : IsCategory SliceMorphismSetoid Slice-∘ Slice-id
-        Slice-isCategory = record
+        SliceMorphismIsMorphism : IsMorphism SliceMorphism-≈ Slice-∘ Slice-id
+        SliceMorphismIsMorphism = record
             { assoc = λ f g h → SliceObjectEq.refl , SliceObjectEq.refl , assoc (morphism f) (morphism g) (morphism h)
-            ; ∘-left-identity = λ f → SliceObjectEq.refl , SliceObjectEq.refl , ∘-left-identity (morphism f)
-            ; ∘-right-identity = λ f → SliceObjectEq.refl , SliceObjectEq.refl , ∘-right-identity (morphism f)
+            ; left-identity = λ f → SliceObjectEq.refl , SliceObjectEq.refl , left-identity (morphism f)
+            ; right-identity = λ f → SliceObjectEq.refl , SliceObjectEq.refl , right-identity (morphism f)
+            ; cong = λ {x} {y} {u} {v} x≈y u≈v → proj₁ u≈v , proj₁ (proj₂ x≈y) , cong (proj₂ (proj₂ x≈y)) (proj₂ (proj₂ u≈v))
             }
             where
-                open IsCategory isCategory
+                open IsMorphism isMorphism
                 open SliceMorphism
+                open import Relation.Binary.Indexed.SetoidReasoning
+
+        SliceMorphismStructure : MorphismStructure 𝒸 ℓ hom[-, b ]
+        SliceMorphismStructure = record
+            { Carrier = uncurry SliceMorphism
+            ; _≈_ = SliceMorphism-≈
+            ; isEquivalence = SliceMorphism-≈-IsEquivalence
+            ; _∘_ = Slice-∘
+            ; id = Slice-id
+            ; isMorphism = SliceMorphismIsMorphism
+            }
 
 --     S     T
 --  C --> E <-- D
@@ -133,11 +119,8 @@ _↓_ : ∀ {𝒸 ℓ} → {C D E : Category {𝒸} {ℓ}}
     → (S : Functor C E) → (T : Functor D E)
     → Category {𝒸 ⊔ ℓ} {ℓ}
 _↓_ {𝒸} {ℓ} {C} {D} {E} S T = record
-    { ObjectSetoid = CommaObjectSetoid -- CommaObject
-    ; MorphismSetoid = CommaMorphismSetoid -- morphism
-    ; _∘_ = Comma-∘
-    ; id = {!   !}
-    ; isCategory = {!   !}
+    { ObjectSetoid = CommaObjectSetoid
+    ; Morphism = CommaMorphismStructure
     }
     where
         module C = Category C
@@ -147,7 +130,7 @@ _↓_ {𝒸} {ℓ} {C} {D} {E} S T = record
         open Category E
 
         module ObjEq = B.IsEquivalence (B.Setoid.isEquivalence ObjectSetoid)
-        module MorphEq = IsEquivalence (Setoid.isEquivalence MorphismSetoid)
+        module MorphEq = IsEquivalence (MorphismStructure.isEquivalence Morphism)
 
         record CommaObject : Set (𝒸 ⊔ ℓ) where
             field
@@ -198,7 +181,7 @@ _↓_ {𝒸} {ℓ} {C} {D} {E} S T = record
         open CommaMorphism
 
         CommaMorphism-≈ : Rel (uncurry CommaMorphism) ℓ
-        CommaMorphism-≈ {f-src , f-tar} {g-src , g-tar} f g =
+        CommaMorphism-≈ f g =
             (morphismBetweenSources f ≈ morphismBetweenSources g) ×
             (morphismBetweenTargets f ≈ morphismBetweenTargets g)
 
@@ -216,27 +199,6 @@ _↓_ {𝒸} {ℓ} {C} {D} {E} S T = record
             ; trans = λ {i} {j} {k} {f} {g} {h} → CommaMorphism-≈-Transitive {i} {j} {k} {f} {g} {h}
             }
 
-        CommaMorphismSetoid : Setoid (CommaObject × CommaObject) (𝒸 ⊔ ℓ) ℓ
-        CommaMorphismSetoid = record
-            { Carrier = uncurry CommaMorphism
-            ; _≈_ = CommaMorphism-≈
-            ; isEquivalence = CommaMorphism-≈-IsEquivalence
-            }
-
-
-        -- ≈-isPreorder : B.IsPreorder
-        --     (λ x y → x ≡ y)
-        --     (λ x y → {!   !}) -- CommaMorphism-≈)
-        -- ≈-isPreorder = record
-        --     { isEquivalence = PropEq.isEquivalence
-        --     ; reflexive     = ≈-isPreorder-reflexive
-        --     ; trans         = λ {i} {j} {k} f g → CommaMorphism-≈-Transitive {{! f  !} , {!   !}} f g -- CommaMorphism-≈-Transitive f g
-        --     }
-        --     where
-        --         ≈-isPreorder-reflexive : _≡_ B.⇒ CommaMorphism-≈
-        --         ≈-isPreorder-reflexive refl = MorphEq.refl , MorphEq.refl
-
-
         Comma-∘ : ∀ {a b c}
             → CommaMorphism b c
             → CommaMorphism a b
@@ -245,25 +207,61 @@ _↓_ {𝒸} {ℓ} {C} {D} {E} S T = record
             { morphismBetweenSources = morphismBetweenSources f ∘ morphismBetweenSources g
             ; morphismBetweenTargets = morphismBetweenTargets f ∘ morphismBetweenTargets g
             ; commutes =
-                begin⟨ MorphismSetoid ⟩
+                begin⟨ setoid ⟩
                     morphism c ∘ (morphismBetweenSources f ∘ morphismBetweenSources g)
                 ≈⟨ sym (assoc (morphismBetweenSources g) (morphismBetweenSources f) (morphism c)) ⟩
                     (morphism c ∘ morphismBetweenSources f) ∘ morphismBetweenSources g
-                ≈⟨ cong (λ x → x ∘ morphismBetweenSources g) (commutes f) ⟩
-                    morphismBetweenTargets f ∘ morphism b ∘ morphismBetweenSources g
-                ≈⟨ {!  morphism c !} ⟩
-                    {!   !}
-                ≈⟨ {!   !} ⟩
-                    (morphismBetweenTargets f ∘ morphismBetweenTargets g) ∘ a .morphism
+                ≈⟨ cong (commutes f) MorphEq.refl ⟩
+                    (morphismBetweenTargets f ∘ morphism b) ∘ morphismBetweenSources g
+                ≈⟨ assoc (morphismBetweenSources g) (morphism b) (morphismBetweenTargets f) ⟩
+                    morphismBetweenTargets f ∘ (morphism b ∘ morphismBetweenSources g)
+                ≈⟨ cong MorphEq.refl (commutes g) ⟩
+                    morphismBetweenTargets f ∘ (morphismBetweenTargets g ∘ morphism a)
+                ≈⟨ sym (assoc (morphism a) (morphismBetweenTargets g) (morphismBetweenTargets f)) ⟩
+                    (morphismBetweenTargets f ∘ morphismBetweenTargets g) ∘ morphism a
                 ∎
             }
             where
                 open CommaMorphism
                 open import Relation.Binary.Indexed.SetoidReasoning
-                open IsCategory isCategory
-                open IsEquivalence (Setoid.isEquivalence MorphismSetoid)
+                open IsMorphism isMorphism
+                open IsEquivalence (MorphismStructure.isEquivalence Morphism)
 
-                open import Function using (_on_)
-                cong : ∀ {i j} {x y} → (f : Setoid.Carrier MorphismSetoid {!   !} → Setoid.Carrier MorphismSetoid {!   !})
-                    → Setoid._≈_ MorphismSetoid x y → Setoid._≈_ MorphismSetoid (f x) (f y)
-                cong f x≈y = {!   !}
+        Comma-id : ∀ a → CommaMorphism a a
+        Comma-id a = record
+            { morphismBetweenSources = id (S.mapObject (source a))
+            ; morphismBetweenTargets = id (T.mapObject (target a))
+            ; commutes =
+                begin⟨ setoid ⟩
+                    morphism a ∘ id (S.mapObject (source a))
+                ≈⟨ right-identity (morphism a) ⟩
+                    morphism a
+                ≈⟨ sym (left-identity (morphism a)) ⟩
+                    id (T.mapObject (target a)) ∘ morphism a
+                ∎
+            }
+            where
+                open IsMorphism isMorphism
+                open import Relation.Binary.Indexed.SetoidReasoning
+                open IsEquivalence (MorphismStructure.isEquivalence Morphism)
+
+        CommaMorphismIsMorphism : IsMorphism CommaMorphism-≈ Comma-∘ Comma-id
+        CommaMorphismIsMorphism = record
+            { assoc = λ f g h →
+                assoc (morphismBetweenSources f) (morphismBetweenSources g) (morphismBetweenSources h) ,
+                assoc (morphismBetweenTargets f) (morphismBetweenTargets g) (morphismBetweenTargets h)
+            ; left-identity = λ f → (left-identity (morphismBetweenSources f)) , (left-identity (morphismBetweenTargets f))
+            ; right-identity = λ f → (right-identity (morphismBetweenSources f)) , (right-identity (morphismBetweenTargets f))
+            ; cong = λ x≈y u≈v → (cong (proj₁ x≈y) (proj₁ u≈v)) , (cong (proj₂ x≈y) (proj₂ u≈v))
+            }
+            where open IsMorphism isMorphism
+
+        CommaMorphismStructure : MorphismStructure (𝒸 ⊔ ℓ) ℓ CommaObject
+        CommaMorphismStructure = record
+            { Carrier = uncurry CommaMorphism
+            ; _≈_ = CommaMorphism-≈
+            ; isEquivalence = CommaMorphism-≈-IsEquivalence
+            ; _∘_ = Comma-∘
+            ; id = Comma-id
+            ; isMorphism = CommaMorphismIsMorphism
+            }
