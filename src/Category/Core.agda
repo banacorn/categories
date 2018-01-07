@@ -76,12 +76,13 @@ record Category {𝒸 ℓ : Level} : Set (suc (𝒸 ⊔ ℓ)) where
     -- hom[_,_] : Object → Object → Set 𝒸
     -- hom[ a , b ] = a ⇒ b
 
-record IsFunctor {𝒸 ℓ : Level} {C D : Category {𝒸} {ℓ}}
+record IsFunctor {𝒸₀ ℓ₀ 𝒸₁ ℓ₁ : Level}
+    {C : Category {𝒸₀} {ℓ₀}} {D : Category {𝒸₁} {ℓ₁}}
     (mapObject : Category.Object C → Category.Object D)
     (mapMorphism : ∀ {a b}
             → (Category._⇒_ C) a             b
             → (Category._⇒_ D) (mapObject a) (mapObject b))
-    : Set (suc (𝒸 ⊔ ℓ)) where
+    : Set (𝒸₀ ⊔ ℓ₀ ⊔ 𝒸₁ ⊔ ℓ₁) where
 
     module C = Category C
     open Category D
@@ -89,13 +90,14 @@ record IsFunctor {𝒸 ℓ : Level} {C D : Category {𝒸} {ℓ}}
     field
         preserve-id : (a : C.Object)
             → mapMorphism (C.id a) ≈ id (mapObject a)
-        preserve-∘ : {a b c : C.Object} {f : a C.⇒ b} {g : b C.⇒ c}
+        preserve-∘ : {a b c : C.Object} (f : a C.⇒ b) (g : b C.⇒ c)
             → mapMorphism (C._∘_ g f) ≈ mapMorphism g ∘ mapMorphism f
 
-record Functor {𝒸 ℓ : Level} (C D : Category {𝒸} {ℓ}) : Set (suc (𝒸 ⊔ ℓ)) where
+record Functor {𝒸₀ ℓ₀ 𝒸₁ ℓ₁ : Level}
+    (C : Category {𝒸₀} {ℓ₀}) (D : Category {𝒸₁} {ℓ₁}) : Set (𝒸₀ ⊔ ℓ₀ ⊔ 𝒸₁ ⊔ ℓ₁) where
     module C = Category C
     module D = Category D
     field
         mapObject : C.Object → D.Object
         mapMorphism : ∀ {a b} → a C.⇒ b → mapObject a D.⇒ mapObject b
-        isFunctor : IsFunctor {𝒸} {ℓ} {C} {D} mapObject mapMorphism
+        isFunctor : IsFunctor {𝒸₀} {ℓ₀} {𝒸₁} {ℓ₁} {C} {D} mapObject mapMorphism

@@ -115,10 +115,11 @@ _/_ {𝒸} {ℓ} C b = record
 --     S     T
 --  C --> E <-- D
 --
-_↓_ : ∀ {𝒸 ℓ} → {C D E : Category {𝒸} {ℓ}}
+_↓_ : {𝒸₀ ℓ₀ 𝒸₁ ℓ₁ 𝒸₂ ℓ₂ : Level}
+    {C : Category {𝒸₀} {ℓ₀}} {D : Category {𝒸₁} {ℓ₁}} {E : Category {𝒸₂} {ℓ₂}}
     → (S : Functor C E) → (T : Functor D E)
-    → Category {𝒸 ⊔ ℓ} {ℓ}
-_↓_ {𝒸} {ℓ} {C} {D} {E} S T = record
+    → Category {𝒸₀ ⊔ 𝒸₁ ⊔ 𝒸₂ ⊔ ℓ₂} {ℓ₂}
+_↓_ {𝒸₀} {ℓ₀} {𝒸₁} {ℓ₁} {𝒸₂} {ℓ₂} {C} {D} {E} S T = record
     { ObjectSetoid = CommaObjectSetoid
     ; Morphism = CommaMorphismStructure
     }
@@ -132,7 +133,7 @@ _↓_ {𝒸} {ℓ} {C} {D} {E} S T = record
         module ObjEq = B.IsEquivalence (B.Setoid.isEquivalence ObjectSetoid)
         module MorphEq = IsEquivalence (MorphismStructure.isEquivalence Morphism)
 
-        record CommaObject : Set (𝒸 ⊔ ℓ) where
+        record CommaObject : Set (𝒸₀ ⊔ 𝒸₁ ⊔ 𝒸₂ ⊔ ℓ₂) where
             field
                 source : C.Object
                 target : D.Object
@@ -140,7 +141,7 @@ _↓_ {𝒸} {ℓ} {C} {D} {E} S T = record
 
         open CommaObject
 
-        CommaObject-≈ : B.Rel CommaObject ℓ
+        CommaObject-≈ : B.Rel CommaObject ℓ₂
         CommaObject-≈ f g =
             Σ[ source-≈ ∈ S.mapObject (source f) ≈o S.mapObject (source g) ]
             Σ[ target-≈ ∈ T.mapObject (target f) ≈o T.mapObject (target g) ]
@@ -163,14 +164,14 @@ _↓_ {𝒸} {ℓ} {C} {D} {E} S T = record
             ; trans = λ {f} {g} {h} → CommaObject-≈-Transitive {f} {g} {h}
             }
 
-        CommaObjectSetoid : B.Setoid (𝒸 ⊔ ℓ) ℓ
+        CommaObjectSetoid : B.Setoid (𝒸₀ ⊔ 𝒸₁ ⊔ 𝒸₂ ⊔ ℓ₂) ℓ₂
         CommaObjectSetoid = record
             { Carrier = CommaObject
             ; _≈_ = CommaObject-≈
             ; isEquivalence = CommaObject-≈-IsEquivalence
             }
 
-        record CommaMorphism (src : CommaObject) (tar : CommaObject) : Set (𝒸 ⊔ ℓ) where
+        record CommaMorphism (src : CommaObject) (tar : CommaObject) : Set (𝒸₀ ⊔ 𝒸₁ ⊔ 𝒸₂ ⊔ ℓ₂) where
             module SRC = CommaObject src
             module TAR = CommaObject tar
             field
@@ -180,7 +181,7 @@ _↓_ {𝒸} {ℓ} {C} {D} {E} S T = record
 
         open CommaMorphism
 
-        CommaMorphism-≈ : Rel (uncurry CommaMorphism) ℓ
+        CommaMorphism-≈ : Rel (uncurry CommaMorphism) ℓ₂
         CommaMorphism-≈ f g =
             (morphismBetweenSources f ≈ morphismBetweenSources g) ×
             (morphismBetweenTargets f ≈ morphismBetweenTargets g)
@@ -256,7 +257,7 @@ _↓_ {𝒸} {ℓ} {C} {D} {E} S T = record
             }
             where open IsMorphism isMorphism
 
-        CommaMorphismStructure : MorphismStructure (𝒸 ⊔ ℓ) ℓ CommaObject
+        CommaMorphismStructure : MorphismStructure (𝒸₀ ⊔ 𝒸₁ ⊔ 𝒸₂ ⊔ ℓ₂) ℓ₂ CommaObject
         CommaMorphismStructure = record
             { Carrier = uncurry CommaMorphism
             ; _≈_ = CommaMorphism-≈
