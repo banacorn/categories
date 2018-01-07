@@ -54,7 +54,7 @@ record MorphismStructure (𝒸 ℓ : Level) (Object : Set 𝒸) : Set (suc (𝒸
         isMorphism : IsMorphism _≈_ _∘_ id
 
 
-record Category {𝒸 ℓ : Level} : Set (suc (𝒸 ⊔ ℓ)) where
+record Category (𝒸 ℓ : Level) : Set (suc (𝒸 ⊔ ℓ)) where
 
     field
         ObjectSetoid : B.Setoid 𝒸 ℓ
@@ -77,7 +77,7 @@ record Category {𝒸 ℓ : Level} : Set (suc (𝒸 ⊔ ℓ)) where
     -- hom[ a , b ] = a ⇒ b
 
 record IsFunctor {𝒸₀ ℓ₀ 𝒸₁ ℓ₁ : Level}
-    {C : Category {𝒸₀} {ℓ₀}} {D : Category {𝒸₁} {ℓ₁}}
+    {C : Category 𝒸₀ ℓ₀} {D : Category 𝒸₁ ℓ₁}
     (mapObject : Category.Object C → Category.Object D)
     (mapMorphism : ∀ {a b}
             → (Category._⇒_ C) a             b
@@ -94,7 +94,7 @@ record IsFunctor {𝒸₀ ℓ₀ 𝒸₁ ℓ₁ : Level}
             → mapMorphism (C._∘_ g f) ≈ mapMorphism g ∘ mapMorphism f
 
 record Functor {𝒸₀ ℓ₀ 𝒸₁ ℓ₁ : Level}
-    (C : Category {𝒸₀} {ℓ₀}) (D : Category {𝒸₁} {ℓ₁}) : Set (𝒸₀ ⊔ ℓ₀ ⊔ 𝒸₁ ⊔ ℓ₁) where
+    (C : Category 𝒸₀ ℓ₀) (D : Category 𝒸₁ ℓ₁) : Set (𝒸₀ ⊔ ℓ₀ ⊔ 𝒸₁ ⊔ ℓ₁) where
     module C = Category C
     module D = Category D
     field

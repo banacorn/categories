@@ -8,7 +8,7 @@ open import Relation.Binary.Indexed
 open import Relation.Binary.Indexed.Extra
 open import Relation.Binary.PropositionalEquality as PropEq using (_≡_; refl)
 
-_/_ : ∀ {𝒸 ℓ} → (C : Category {𝒸} {ℓ}) → (b : Category.Object C) → Category {𝒸} {ℓ}
+_/_ : ∀ {𝒸 ℓ} → (C : Category 𝒸 ℓ) → (b : Category.Object C) → Category 𝒸 ℓ
 _/_ {𝒸} {ℓ} C b = record
     { ObjectSetoid = SliceObjectSetoid
     ; Morphism = SliceMorphismStructure
@@ -116,9 +116,9 @@ _/_ {𝒸} {ℓ} C b = record
 --  C --> E <-- D
 --
 _↓_ : {𝒸₀ ℓ₀ 𝒸₁ ℓ₁ 𝒸₂ ℓ₂ : Level}
-    {C : Category {𝒸₀} {ℓ₀}} {D : Category {𝒸₁} {ℓ₁}} {E : Category {𝒸₂} {ℓ₂}}
+    {C : Category 𝒸₀ ℓ₀} {D : Category 𝒸₁ ℓ₁} {E : Category 𝒸₂ ℓ₂}
     → (S : Functor C E) → (T : Functor D E)
-    → Category {𝒸₀ ⊔ 𝒸₁ ⊔ 𝒸₂ ⊔ ℓ₂} {ℓ₂}
+    → Category (𝒸₀ ⊔ 𝒸₁ ⊔ 𝒸₂ ⊔ ℓ₂) ℓ₂
 _↓_ {𝒸₀} {ℓ₀} {𝒸₁} {ℓ₁} {𝒸₂} {ℓ₂} {C} {D} {E} S T = record
     { ObjectSetoid = CommaObjectSetoid
     ; Morphism = CommaMorphismStructure

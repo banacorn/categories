@@ -6,12 +6,12 @@ open import Category.Comma
 
 -- open Category
 
-initial : ∀ {𝒸 ℓ} → (C : Category {𝒸} {ℓ}) → Category.Object C → Set 𝒸
+initial : ∀ {𝒸 ℓ} → (C : Category 𝒸 ℓ) → Category.Object C → Set 𝒸
 initial C init = ∀ (other : Object) → init ⇒ other
     where
         open Category C
 
-𝟙 : Category {zero} {zero}
+𝟙 : Category _ _
 𝟙 = record
     { ObjectSetoid = record
         { Carrier = ⊤
@@ -30,7 +30,7 @@ initial C init = ∀ (other : Object) → init ⇒ other
     where
         open import Data.Unit
 
-point : ∀ {𝒸 ℓ} → {C : Category {𝒸} {ℓ}} → Category.Object C → Functor 𝟙 C
+point : ∀ {𝒸 ℓ} → {C : Category 𝒸 ℓ} → Category.Object C → Functor 𝟙 C
 point {C = C} c = record
     { mapObject = λ _ → c
     ; mapMorphism = λ _ → id c
@@ -49,7 +49,7 @@ point {C = C} c = record
 
 -- something is universal from c to S when it's an initial object in c / S
 universal : {𝒸₀ ℓ₀ 𝒸₁ ℓ₁ : Level}
-    → {C : Category {𝒸₀} {ℓ₀}} {D : Category {𝒸₁} {ℓ₁}}
+    → {C : Category 𝒸₀ ℓ₀} {D : Category 𝒸₁ ℓ₁}
     → {c : Category.Object C} → {S : Functor D C}
     → (init : Category.Object (point c ↓ S))
     → Set (𝒸₁ ⊔ (ℓ₀ ⊔ 𝒸₀))
