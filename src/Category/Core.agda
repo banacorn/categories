@@ -57,18 +57,18 @@ record MorphismStructure (𝒸 ℓ : Level) (Object : Set 𝒸) : Set (suc (𝒸
 record Category (𝒸 ℓ : Level) : Set (suc (𝒸 ⊔ ℓ)) where
 
     field
-        ObjectSetoid : B.Setoid 𝒸 ℓ
+        Objects : B.Setoid 𝒸 ℓ
 
     Object : Set 𝒸
-    Object = B.Setoid.Carrier ObjectSetoid
+    Object = B.Setoid.Carrier Objects
 
     _≈o_ : Object → Object → Set ℓ
-    _≈o_ = B.Setoid._≈_ ObjectSetoid
+    _≈o_ = B.Setoid._≈_ Objects
 
     field
-        Morphism : MorphismStructure 𝒸 ℓ Object
+        Morphisms : MorphismStructure 𝒸 ℓ Object
 
-    open MorphismStructure Morphism public
+    open MorphismStructure Morphisms public
 
     hom[-,_] : Object → Set 𝒸
     hom[-, b ] = Σ[ a ∈ Object ] a ⇒ b

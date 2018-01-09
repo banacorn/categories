@@ -5,12 +5,12 @@ open import Category.Core
 
 𝟙 : Category _ _
 𝟙 = record
-    { ObjectSetoid = record
+    { Objects = record
         { Carrier = ⊤
         ; _≈_ = λ _ _ → ⊤
         ; isEquivalence = _
         }
-    ; Morphism = record
+    ; Morphisms = record
         { Carrier = λ x → ⊤
         ; _≈_ = λ _ _ → ⊤
         ; isEquivalence = _
@@ -35,7 +35,7 @@ point {_} {_} {C} c = record
     where
         open Category C
         open import Relation.Binary.Indexed
-        module MorphEq = IsEquivalence (MorphismStructure.isEquivalence Morphism)
+        module MorphEq = IsEquivalence (MorphismStructure.isEquivalence Morphisms)
 
         open IsMorphism isMorphism
 
@@ -52,6 +52,6 @@ identity C = record
     where
         open Category C
         open import Relation.Binary.Indexed
-        module MorphEq = IsEquivalence (MorphismStructure.isEquivalence Morphism)
+        module MorphEq = IsEquivalence (MorphismStructure.isEquivalence Morphisms)
 
         open IsMorphism isMorphism

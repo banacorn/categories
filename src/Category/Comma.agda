@@ -10,13 +10,13 @@ open import Relation.Binary.PropositionalEquality as PropEq using (_≡_; refl)
 
 _/_ : ∀ {𝒸 ℓ} → (C : Category 𝒸 ℓ) → (b : Category.Object C) → Category 𝒸 ℓ
 _/_ {𝒸} {ℓ} C b = record
-    { ObjectSetoid = SliceObjectSetoid
-    ; Morphism = SliceMorphismStructure
+    { Objects = SliceObjectSetoid
+    ; Morphisms = SliceMorphismStructure
     }
     where
         open Category C
-        module ObjEq = B.IsEquivalence (B.Setoid.isEquivalence ObjectSetoid)
-        module MorphEq = IsEquivalence (MorphismStructure.isEquivalence Morphism)
+        module ObjEq = B.IsEquivalence (B.Setoid.isEquivalence Objects)
+        module MorphEq = IsEquivalence (MorphismStructure.isEquivalence Morphisms)
 
         SliceObject-≈ : B.Rel hom[-, b ] ℓ
         SliceObject-≈ (x , x→b) (y , y→b) = Σ[ x≈y ∈ x ≈o y ] x→b ≈ y→b
@@ -120,8 +120,8 @@ _↓_ : {𝒸₀ ℓ₀ 𝒸₁ ℓ₁ 𝒸₂ ℓ₂ : Level}
     → (S : Functor C E) → (T : Functor D E)
     → Category (𝒸₀ ⊔ 𝒸₁ ⊔ 𝒸₂ ⊔ ℓ₂) ℓ₂
 _↓_ {𝒸₀} {ℓ₀} {𝒸₁} {ℓ₁} {𝒸₂} {ℓ₂} {C} {D} {E} S T = record
-    { ObjectSetoid = CommaObjectSetoid
-    ; Morphism = CommaMorphismStructure
+    { Objects = CommaObjectSetoid
+    ; Morphisms = CommaMorphismStructure
     }
     where
         module C = Category C
@@ -130,8 +130,8 @@ _↓_ {𝒸₀} {ℓ₀} {𝒸₁} {ℓ₁} {𝒸₂} {ℓ₂} {C} {D} {E} S T =
         module T = Functor T
         open Category E
 
-        module ObjEq = B.IsEquivalence (B.Setoid.isEquivalence ObjectSetoid)
-        module MorphEq = IsEquivalence (MorphismStructure.isEquivalence Morphism)
+        module ObjEq = B.IsEquivalence (B.Setoid.isEquivalence Objects)
+        module MorphEq = IsEquivalence (MorphismStructure.isEquivalence Morphisms)
 
         record CommaObject : Set (𝒸₀ ⊔ 𝒸₁ ⊔ 𝒸₂ ⊔ ℓ₂) where
             field
@@ -226,7 +226,7 @@ _↓_ {𝒸₀} {ℓ₀} {𝒸₁} {ℓ₁} {𝒸₂} {ℓ₂} {C} {D} {E} S T =
                 open CommaMorphism
                 open import Relation.Binary.Indexed.SetoidReasoning
                 open IsMorphism isMorphism
-                open IsEquivalence (MorphismStructure.isEquivalence Morphism)
+                open IsEquivalence (MorphismStructure.isEquivalence Morphisms)
 
         Comma-id : ∀ a → CommaMorphism a a
         Comma-id a = record
@@ -244,7 +244,7 @@ _↓_ {𝒸₀} {ℓ₀} {𝒸₁} {ℓ₁} {𝒸₂} {ℓ₂} {C} {D} {E} S T =
             where
                 open IsMorphism isMorphism
                 open import Relation.Binary.Indexed.SetoidReasoning
-                open IsEquivalence (MorphismStructure.isEquivalence Morphism)
+                open IsEquivalence (MorphismStructure.isEquivalence Morphisms)
 
         CommaMorphismIsMorphism : IsMorphism CommaMorphism-≈ Comma-∘ Comma-id
         CommaMorphismIsMorphism = record
