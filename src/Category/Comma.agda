@@ -179,7 +179,7 @@ _↓_ {𝒸₀} {ℓ₀} {𝒸₁} {ℓ₁} {𝒸₂} {ℓ₂} {C} {D} {E} S T =
                 morphismBetweenTargets : T.mapObject SRC.target ⇒ T.mapObject TAR.target
                 commutes : TAR.morphism ∘ morphismBetweenSources ≈ morphismBetweenTargets ∘ SRC.morphism
 
-        open CommaMorphism
+        open CommaMorphism public
 
         CommaMorphism-≈ : Rel (uncurry CommaMorphism) ℓ₂
         CommaMorphism-≈ f g =
