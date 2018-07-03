@@ -93,6 +93,7 @@ record IsFunctor {𝒸₀ ℓ₀ 𝒸₁ ℓ₁ : Level}
         preserve-∘ : {a b c : C.Object} (f : a C.⇒ b) (g : b C.⇒ c)
             → mapMorphism (C._∘_ g f) ≈ mapMorphism g ∘ mapMorphism f
 
+
 record Functor {𝒸₀ ℓ₀ 𝒸₁ ℓ₁ : Level}
     (C : Category 𝒸₀ ℓ₀) (D : Category 𝒸₁ ℓ₁) : Set (𝒸₀ ⊔ ℓ₀ ⊔ 𝒸₁ ⊔ ℓ₁) where
     module C = Category C

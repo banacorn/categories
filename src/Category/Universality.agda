@@ -28,14 +28,14 @@ initial C c = universal {C = C} {D = C} {c} {identity C} (record
             open import Data.Unit
             open Category C
 
--- initial-prop : ∀ {𝒸 ℓ} {C : Category 𝒸 ℓ}
---     → (init : Category.Object C)
---     → initial C init
---     → (other : Category.Object C)
---     → Category._⇒_ C init other
--- initial-prop {C = C} obj obj-init other = {!   !}
---     where
---         open Category C
+initial-prop : ∀ {𝒸 ℓ} {C : Category 𝒸 ℓ}
+    → (init : Category.Object C)
+    → initial C init
+    → (other : Category.Object C)
+    → Category._⇒_ C init other
+initial-prop {C = C} obj obj-init other = Comma.morphismBetweenSources {!   !}
+    where
+        open Category C
 
 -- prop1 : {!   !}
 -- prop1 = {! initial  !}
